@@ -1,9 +1,12 @@
-import pygame, random
+import pygame, random, math
 import numpy as np
 
 WIDTH, HEIGHT = 800, 800
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Snake")
+
+MOVE_SNAKE = pygame.USEREVENT + 1
+GAME_OVER = pygame.USEREVENT + 2
 
 WHITE = (255, 255, 255)
 LIGHTGREY = (200, 200, 200)
@@ -40,22 +43,26 @@ class Snake():
       else:
         new_body.append(self.body[i-1])
     
-    self.body = new_body
-    new_head = self.body[0]
+    new_head = new_body[0]
 
-    if new_head in self.body:
-      print("GAME OVER")
-      pygame.quit()
-    
-    if self.body[0] in apples:
+    if new_head in self.body or out_of_bounds(new_head[0], new_head[1]):
+      pygame.event.post(pygame.event.Event(GAME_OVER))
+
+    if new_head in apples:
       global points
       points += 1
-      print("apple eaten")
+      self.delay = math.floor(self.delay * .95)
 
       new_body.append(self.body[-1])
-      apples.remove(self.body[0])
+      apples.remove(new_body[0])
 
-      create_apple(random.choice(range(GRID_WIDTH)), random.choice(range(GRID_HEIGHT)))
+      new_apple = [random.choice(range(GRID_WIDTH)), random.choice(range(GRID_HEIGHT))]
+      while new_apple in new_body:
+        new_apple = [random.choice(range(GRID_WIDTH)), random.choice(range(GRID_HEIGHT))]
+      
+      create_apple(new_apple[0], new_apple[1])
+    
+    self.body = new_body
 
 
 def create_grid(width, height):
@@ -72,6 +79,10 @@ def get_grid_rect(grid_x, grid_y):
   rect = pygame.Rect(grid_x * GRID_SIZE, grid_y * GRID_SIZE, GRID_SIZE, GRID_SIZE)
 
   return rect
+
+
+def out_of_bounds(grid_x, grid_y):
+  return grid_x < 0 or grid_x >= GRID_WIDTH or grid_y < 0 or grid_y >= GRID_HEIGHT
 
 
 def draw_snake(surface, snake: Snake):
@@ -99,9 +110,8 @@ def main():
 
   player = Snake()
   new_direction = player.direction
-
-  MOVE_SNAKE = pygame.USEREVENT + 1
-  pygame.time.set_timer(MOVE_SNAKE, player.delay)
+  
+  pygame.time.set_timer(MOVE_SNAKE, player.delay, 1)
 
   while run:
     clock.tick(FPS)
@@ -109,7 +119,11 @@ def main():
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         run = False
-        pygame.quit()
+      
+      if event.type == GAME_OVER:
+        print("GAME OVER")
+        print(f"Final Score: {points}")
+        run = False
       
       if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_RIGHT and player.direction != LEFT:
@@ -124,6 +138,7 @@ def main():
       if event.type == MOVE_SNAKE:
         player.direction = new_direction
         player.move()
+        pygame.time.set_timer(MOVE_SNAKE, player.delay, 1)
     
     draw_window(player, apples)
   
