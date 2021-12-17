@@ -10,6 +10,15 @@ RED = (255, 0, 0)
 
 FPS = 60
 
+GRID_WIDTH, GRID_HEIGHT = 18, 18
+GRID_SIZE = 50
+
+
+def create_grid(width, height):
+  grid = [[WHITE for x in range(width)] for y in range(height)]
+
+  return grid
+
 
 def draw_window():
   WIN.blit(WHITE, (0, 0))
