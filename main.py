@@ -41,6 +41,11 @@ class Snake():
         new_body.append(self.body[i-1])
     
     self.body = new_body
+    new_head = self.body[0]
+
+    if new_head in self.body:
+      print("GAME OVER")
+      pygame.quit()
     
     if self.body[0] in apples:
       global points
@@ -93,6 +98,7 @@ def main():
   run = True
 
   player = Snake()
+  new_direction = player.direction
 
   MOVE_SNAKE = pygame.USEREVENT + 1
   pygame.time.set_timer(MOVE_SNAKE, player.delay)
@@ -106,7 +112,6 @@ def main():
         pygame.quit()
       
       if event.type == pygame.KEYDOWN:
-        new_direction = [0, 0]
         if event.key == pygame.K_RIGHT and player.direction != LEFT:
           new_direction = RIGHT
         if event.key == pygame.K_UP and player.direction != DOWN:
